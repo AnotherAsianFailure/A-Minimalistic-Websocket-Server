@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>WebSocket Test</title>
+	<style>
+		body {
+
+		}
+	</style>
+</head>
+<body>
+	<script>
+		const websocket = new WebSocket('ws://127.0.0.1:50100/')
+
+		let counter = 0
+		let lp
+
+		websocket.addEventListener('open', function(){
+			console.log('Connected to Server.')
+			lp = setInterval(function(){
+				console.log('Sent: Ping ('+counter+').')
+				websocket.send('ping')
+			}, 1000)
+		})
+
+		websocket.addEventListener('message', function(e){
+			console.log('Received: '+e.data+'('+counter+').')
+			counter++
+		})
+
+		websocket.addEventListener('close', function(){
+			console.log('Disconnected from Server.')
+			clearInterval(lp)
+		})
+	</script>
+</body>
+</html>
