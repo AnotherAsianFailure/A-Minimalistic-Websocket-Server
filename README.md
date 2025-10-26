@@ -22,8 +22,8 @@ A work-in-progress software of an absent-minded idiot, written entirely in C, wi
 - **5:** Source Code includes ~incomprehensible ramblings of an idiot~ helpful comments.
 
 ## Using test/index.html:
-...
-0. Start the Server. (And perhaps compile it if you haven't.)
+...<br>
+0. Start the Server. (And perhaps compile it if you haven't.)<br>
 1. Open this file in a Web Browser.
 2. This HTML page runs JavaScript, so please make sure that JS Execution is enabled.
 3. The script will automatically attempt to connect to `ws://127.0.0.1:50100` by default.
