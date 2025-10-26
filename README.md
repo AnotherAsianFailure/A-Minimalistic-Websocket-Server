@@ -13,12 +13,12 @@ A work-in-progress software of an absent-minded idiot, written entirely in C, wi
 ## Features:
 *Features?! What features??*
 <br>
-- **1:** Listens on Port 50100 by Default,
+- **1:** Listens on Port 50100 by Default, (this is due to the fact that these ports are usually left to die in the corner)
 - However, this can be customized by setting the `--port` flag followed by an unsigned integer from 1 to 65535 (inclusive).
 - Example: `./wsserver --port 50101` (It will now listen on port 50101 instead)
-- **2:** Logs useless information to Standard Input/Output. e.g. The port that it is listening on, Client Request Packet, and whole lot of other trash.
+- **2:** Logs useless information to Standard Input/Output. e.g. The port that it is listening on, Client Request Packet, and a whole bunch of other trash.
 - **3:** Only accepts 4096 bytes of Request Header Data, returns HTTP Error 413 otherwise. *(Is this even a feature??)*
-- **4:** Responds politely with "Hi" if Client Request is HTTP "GET" without "Upgrade".
+- **4:** Responds politely with "Hi", if Client Request is HTTP "GET" without "Upgrade".
 - **5:** Source Code includes ~incomprehensible ramblings of an idiot~ helpful comments.
 
 ## Using test/index.html:
