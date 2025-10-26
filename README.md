@@ -28,3 +28,9 @@ A work-in-progress software of an absent-minded idiot, written entirely in C, wi
 2. This HTML page runs JavaScript, so please make sure that JS Execution is enabled.
 3. The script will automatically attempt to connect to `ws://127.0.0.1:50100` by default.
 4. You may modify this script in any way you wish. (Because it was simply copied it from [this page in Mozilla.org](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications).)
+
+<br>
+
+### Just Something to Know:
+Like all other softwares under the GNU General Public License, 
+This Program comes **WITH ABSOLUTELY NO WARRA—** Okay, that's enough, you get the idea. (Because I am an absolute idiot, I can not guarantee that this piece of code will actually work without causing you or the people around you to experience a severe existantial crisis.)
