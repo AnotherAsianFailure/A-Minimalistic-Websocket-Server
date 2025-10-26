@@ -32,5 +32,5 @@ A work-in-progress software of an absent-minded idiot, written entirely in C, wi
 <br>
 
 ### Just Something to Know:
-Like all other softwares under the GNU General Public License, 
-This Program comes **WITH ABSOLUTELY NO WARRA—** Okay, that's enough, you get the idea. (Because I am an absolute idiot, I can not guarantee that this piece of code will actually work without causing you or the people around you to experience a severe existantial crisis.)
+Like all other softwares under the GNU General Public License, <br>
+This program comes **WITH ABSOLUTELY NO WARRA—**Okay, that's enough, you get the idea. (Because I am a hopeless failure, I can not guarantee that this piece of code will actually work without causing you or the people around you to experience a severe instance of full existantial crisis.)
