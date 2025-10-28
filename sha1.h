@@ -1,52 +1,22 @@
-#ifndef SHA1_H
-#define SHA1_H
+#pragma once
 
-/*
-   SHA-1 in C
-   By Steve Reid <steve@edmweb.com>
-   100% Public Domain
- */
+#include <stdint.h>
 
-#include "stdint.h"
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-typedef struct
+// don't just forward declare as we want to pass it around by value
+typedef struct _Sha1Digest
 {
-    uint32_t state[5];
-    uint32_t count[2];
-    unsigned char buffer[64];
-} SHA1_CTX;
+    uint32_t digest[5];
+} Sha1Digest;
+Sha1Digest Sha1Digest_fromStr (const char* src);
+void       Sha1Digest_toStr   (const Sha1Digest* digest, char* dst);
 
-void SHA1Transform(
-    uint32_t state[5],
-    const unsigned char buffer[64]
-    );
+// Streamable hashing
+typedef struct _Sha1Ctx Sha1Ctx;
+Sha1Ctx*   Sha1Ctx_create    (void);
+void       Sha1Ctx_reset     (Sha1Ctx*);
+void       Sha1Ctx_write     (Sha1Ctx*, const void* msg, uint64_t bytes);
+Sha1Digest Sha1Ctx_getDigest (Sha1Ctx*);
+void       Sha1Ctx_release   (Sha1Ctx*);
 
-void SHA1Init(
-    SHA1_CTX * context
-    );
-
-void SHA1Update(
-    SHA1_CTX * context,
-    const unsigned char *data,
-    uint32_t len
-    );
-
-void SHA1Final(
-    unsigned char digest[20],
-    SHA1_CTX * context
-    );
-
-void SHA1(
-    char *hash_out,
-    const char *str,
-    uint32_t len);
-
-#if defined(__cplusplus)
-}
-#endif
-
-#endif /* SHA1_H */
+// Helper for one-off buffer hashing
+Sha1Digest Sha1_get (const void* msg, uint64_t bytes);

@@ -147,18 +147,37 @@ int main(int argc, char *argv[]){
 				}
 
 				// If all 8 checks passed, then success
-				if(checks == 8){
+				if(checks >= 8){
 					// Concatenate Magic String to Client's Key 
 					strcat(sec_ws_key, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
 
-					// SHA-1 Hash
-					SHA1_CTX sha;
-					uint8_t hash_result[20];
-					char *hash_buffer = sec_ws_key;
+					printf("\nstrcat: %s\n", sec_ws_key);
 
-					SHA1Init(&sha);
-					SHA1Update(&sha, (uint8_t*)hash_buffer, strlen(hash_buffer));
-					SHA1Final(hash_result, &sha);
+					// New SHA-1 Hash
+					Sha1Digest hash_digest = Sha1_get(sec_ws_key, strlen(sec_ws_key));
+
+					char tmp1[41];
+					Sha1Digest_toStr(&hash_digest, tmp1);
+					printf("\nSHA1 Hex: %s\n", tmp1);
+
+					uint8_t hash_result[20] = {0};
+
+					printf("\nSHA1 unsigned ints:\n");
+
+					for(int i=0; i<5; i++){
+						printf("%u\n", hash_digest.digest[i]);
+
+						uint32_t a = htonl(hash_digest.digest[i]);
+
+						for(int j=0; j<4; j++){
+							hash_result[i*4+j] = ((uint8_t*)&a)[3-j];
+							printf("%c\n", hash_result[i*4+j]);
+							printf("uint8_t[20]: %s\n", hash_result);
+						}
+						printf("uint8_t[20]: %s\n", hash_result);
+					}
+
+					printf("\nSHA1 Binary: %s\n\n", hash_result);
 
 					// Base64 Encode
 					char *b64_result = base64_encode(hash_result, strlen(hash_result), NULL);
