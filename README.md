@@ -2,7 +2,7 @@
 A work-in-progress software of an absent-minded idiot, written entirely in C, with occasional instances of plagiarizing code and use of open-source libraries.<br><br>
 Imported Libraries Are: base64.c, sha1.c, and sha1.h.
 
-## Compiling From Source (Linux):
+## Compiling From Source using gcc (Linux):
 *(You have no other choice [insert evil face emoji])*
 
 1. Download/Clone this Repository onto your local machine (or piece of metal).
@@ -10,6 +10,14 @@ Imported Libraries Are: base64.c, sha1.c, and sha1.h.
 3. Run `gcc -o wsserver sha1.c base64.c wsserver.c` &nbsp; (I know, I know, this is not the proper way to do it)
 4. Now you should have a dynamicaly-linked Linux executable file named **"wsserver"**.
 5. Have fun with it! (`./wsserver`)
+
+## Compiling From Source using cmake
+1. Download/Clone this Repository onto your local machine (or piece of metal).
+2. Make the build directory & cd into it ```mkdir build && cd build ```
+4. Run ```cmake .. && cmake --build .```
+5. Now you should have a dynamicaly-linked Linux executable file named **"wsserver"**.
+6. Have fun with it! (`./wsserver`)
+7. *(I don't gaurentee that it will work but idk...)*
 
 ## Features:
 *Features?! What features??*
