@@ -2,6 +2,9 @@
 A work-in-progress software of an absent-minded idiot, written entirely in C, with occasional instances of plagiarizing code and use of open-source libraries.<br><br>
 Imported Libraries Are: base64.c, sha1.c, and sha1.h.
 
+## A key concept we will never do
+![meme](https://github.com/Beijing-corn87/A-Minimalistic-Websocket-Server/blob/main/Thing%20-we-shall-never-do.jpg?raw=true)
+
 ## Compiling From Source using gcc (Linux):
 *(You have no other choice [insert evil face emoji])*
 
