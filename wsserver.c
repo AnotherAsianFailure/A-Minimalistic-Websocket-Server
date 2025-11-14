@@ -6,7 +6,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
-#include <errno.h>
 
 // Non-system Libraries
 #include "sha1.h"
@@ -14,36 +13,21 @@
 
 // int main.
 int main(int argc, char *argv[]){
-	printf("WebSocket Server v0.0.8\n\n");
+	printf("WebSocket Server v0.0.8 Minimal\n\n");
 
 	// Variables
 	int port = 50100;
 	int serving_fd, connection_fd, n;
 	struct sockaddr_in address;
-	uint8_t responce[4097];
-	uint8_t received[4097];
-
-	// Reset Errno
-	errno = 0;
+	uint8_t responce[2049];
+	uint8_t received[2049];
 
 	// Read Command-line Inputs
 	for(int i=1; i<argc; i++){
 		// Look for "--port" in argv
-		if((strcmp(argv[i], "--port") == 0) && argv[i+1]){
-			// Convert port string to long int
-			char *endptr;
-			port = strtol(argv[i+1], &endptr, 10);
-
-			// Check for problems
-			if(errno != 0){
-				printf("Error: StrToL Conversion Error\n");
-				exit(1);
-			}
-			if(endptr == argv[i+1]){
-				printf("Warning: Argument Not a Number\n");
-			}else if(*endptr != '\0'){
-				printf("Info: Argument Not a Full Integer\n");
-			}
+		if(strcmp(argv[i], "--port") == 0 && argv[i+1]){
+			// Convert String to Integer
+			port = atoi(argv[i+1]);
 		}
 	}
 
@@ -79,17 +63,14 @@ int main(int argc, char *argv[]){
 
 	// Infinite Loop
 	for(;;){
-		struct sockaddr_in addr;
-		socklen_t addrLength;
-
 		// Accept Connection
 		connection_fd = accept(serving_fd, (struct sockaddr*)NULL, NULL);
 
 		// Clean buffer
-		memset(received, 0, 4096);
+		memset(received, 0, 2048);
 
-		// Read message in 4096 byte chunks
-		if((n=read(connection_fd, received, 4095)) > 4){
+		// Read message in 2048 byte chunks
+		if((n=read(connection_fd, received, 2047)) > 4){
 			// Output to std
 			printf("%s", received);
 
@@ -101,13 +82,9 @@ int main(int argc, char *argv[]){
 				int get_next_token = 0;
 				char *sec_ws_key;
 
-				// Make copy of received data
-				char receivedstr[strlen(received)+1];
-				strcpy(receivedstr, received);
-
 				// Split data by \n,\r, and whitespace
 				char *token;
-				token = strtok(receivedstr, "\n\r ");
+				token = strtok(received, "\n\r ");
 				while(token != NULL){
 					// Copy the string if get_next_token is 1
 					if(get_next_token == 1){
@@ -160,8 +137,8 @@ int main(int argc, char *argv[]){
 					Sha1Digest hash_digest = Sha1_get(sec_ws_key, strlen(sec_ws_key));
 					free(sec_ws_key); // No longer needed
 
-					// Allocate 20 bytes + 1 Null Terminator
-					uint8_t hash_result[21] = {0};
+					// Allocate 20 bytes
+					uint8_t hash_result[20];
 
 					// Loop through 32bit hash digest
 					for(int i=0; i<5; i++){
@@ -179,7 +156,7 @@ int main(int argc, char *argv[]){
 					printf("Info: Received WebSocket Upgrade Request\nSec-WebSocket-Accept: %s\n", b64_result);
 
 					// Respond with WebSocket Handshake
-					snprintf((char*)responce, sizeof(responce), "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: %s\r\n\r\nHi", b64_result);
+					snprintf((char*)responce, sizeof(responce), "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: %s\r\n\r\n", b64_result);
 					write(connection_fd, (char*)responce, strlen((char*)responce));
 					//
 					close(connection_fd);
@@ -190,14 +167,14 @@ int main(int argc, char *argv[]){
 					close(connection_fd);
 				}
 			}else{
-				// Respond with Error 431 if it gets cut off (request > 4kib)
-				snprintf((char*)responce, sizeof(responce), "HTTP/1.0 431 Request Header Fields Too Large\r\n\r\n");
+				// Respond with Error 400 if it gets cut off (request > 4kib)
+				snprintf((char*)responce, sizeof(responce), "HTTP/1.0 400 Bad Request\r\n\r\n");
 				write(connection_fd, (char*)responce, strlen((char*)responce));
 				close(connection_fd);
 			}
 
 			// Clean buffer
-			memset(received, 0, 4096);
+			memset(received, 0, 2048);
 		}
 
 		// Check for issues
@@ -207,7 +184,6 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	// This line should (in theory) never get executed,
-	// as this program can only be either terminated or killed [insert knife emoji].
+	// This line should (in theory) never get executed.
 	return 0;
 }
