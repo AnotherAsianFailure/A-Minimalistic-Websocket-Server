@@ -1,6 +1,7 @@
 # A-Minimalistic-Websocket-Server
-A work-in-progess software of an absent-minded idiot, written entirely in C, with occasional instances of plagiarizing code and use of open-source libraries.<br><br>
+An inadequate and substandard software of an absent-minded idiot, written entirely in C, with occasional instances of plagiarizing code and use of open-source libraries.<br><br>
 Imported Libraries Are: base64.c, sha1.c, and sha1.h.
+*(Vibe-coding is Not Allowed Here!)*
 
 ## Compiling From Source (Linux):
 *(You have no other choice [insert evil face emoji])*
@@ -17,8 +18,10 @@ Imported Libraries Are: base64.c, sha1.c, and sha1.h.
 - **1:** Listens on Port 50100 by Default, (this is due to the fact that these ports are usually left to die in the corner)
 - However, this can be customized by setting the `--port` flag followed by an unsigned integer from 1 to 65535 (inclusive).
 - Example: `./wsserver --port 50101` (It will now listen on port 50101 instead)
-- **2:** Logs useless information to Standard Input/Output. e.g. The port that it is listening on, Client Request Packet, and a whole bunch of other trash.
-- **3:** Only accepts 4096 bytes of Request Header Data, returns HTTP Error 413 otherwise. *(Is this even a feature??)*
+- **3:** Limits the Maximum Amount of Client Connections to 64.
+- Similar to `--port`, this value can be modified by specifying the `--max-con` flag followed by an unsigned non-zero integer up to 1024 (inclusive).
+- **2:** Logs useless information to Standard Input/Output. e.g. The port that it is listening on, Client Sent Packets, and a whole bunch of other trash.
+- **3:** Only accepts 2048 bytes of Request Header Data, returns HTTP Error 400 otherwise. *(Is this even a feature??)*
 - **4:** Responds politely with "Hi", if Client Request is HTTP "GET" without "Upgrade".
 - **5:** Source Code includes ~incomprehensible ramblings of an idiot~ helpful comments.
 
@@ -28,7 +31,8 @@ Imported Libraries Are: base64.c, sha1.c, and sha1.h.
 1. Open this file in a Web Browser.
 2. This HTML page runs JavaScript, so please make sure that JS Execution is enabled.
 3. The script will automatically attempt to connect to `ws://127.0.0.1:50100` by default.
-4. You may modify this script in any way you wish. (Because it was simply copied it from [this page in Mozilla.org](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications).)
+4. After successful connections, the Page will send a random number generated on page load every second, while also logging any data received from the server.
+6. You may modify this script in any way you wish. (Because it was simply copied it from [this page in Mozilla.org](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications).)
 
 <br>
 

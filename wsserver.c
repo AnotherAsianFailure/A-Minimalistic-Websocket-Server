@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -11,15 +12,106 @@
 #include "sha1.h"
 #include "base64.h"
 
+// Global Variables
+int max_con = 64; // Maximum amount of Client Connections or Worker Threads
+int *connections; // Connection FD Buffer
+
+// Worker Thread does the WebSocket Communication for Every Client
+void *worker(void *arg){
+	// Convert Void to Int
+	int id = *((int*)arg);
+
+	printf("\nThread %d: Started - Connection FD: %d\n", id, connections[id]);
+
+	// Frame Header Data Buffer
+	uint8_t extract[3];
+
+	for(;;){
+		// Clean
+		memset(extract, 0, 3);
+
+		// Read from Socket
+		if(recv(connections[id], extract, 2, 0) > 0){
+			printf("\nThread %d: Frame Received\n", id);
+
+			uint64_t payload_length;
+
+			// Extracting Fram Header Data
+			uint8_t fin = extract[0] >> 7;
+			uint8_t opcode = extract[0] & 0b00001111;
+			uint8_t p_len = extract[1] & 0b01111111;
+
+			printf("- FIN: %d\n- OPCODE: %d\n", fin, opcode);
+
+			// Payload length (7-bit) is weird
+			if(p_len <= 125){
+				// p_len is Payload Length
+				payload_length = p_len;
+			}else if(p_len == 126){
+				// The next 2 bytes is Payload Length
+				uint8_t p[2];
+				if(read(connections[id],p,2)){
+					payload_length = (p[0]<<8)|p[1];
+				}
+			}else{
+				// The next 8 bytes is Payload Length
+				uint8_t p[8];
+				if(read(connections[id],p,8)){
+					payload_length = (((uint64_t)p[0]<<56)&0b01111111)|((uint64_t)p[1]<<48)|((uint64_t)p[2]<<40)|
+					((uint64_t)p[3]<<32)|((uint64_t)p[4]<<24)|((uint64_t)p[5]<<16)|((uint64_t)p[6]<<8)|(uint64_t)p[7];
+				}
+			}
+			printf("- Payload Length: %llu\n", payload_length);
+
+			// Next 4 bytes is Masking Key
+			uint8_t mask[4];
+			if(read(connections[id], mask, 4)){
+				// Create Buffer for Payload Data
+				uint8_t encoded[payload_length];
+
+				if(read(connections[id], encoded, payload_length)){
+					printf("- Raw: %s\n", encoded);
+
+					// Buffer for Decoded Data
+					char decoded[payload_length+1];
+					decoded[payload_length] = 0;
+
+					// Loop through Encoded to Decode
+					for(uint64_t i=0; i<payload_length; i++){
+						// Use the 4 Masking Bytes to XOR the Raw Data
+						decoded[i] = encoded[i] ^ mask[i % 4];
+					}
+
+					// The Real Data has been Extracted!
+					printf("- Decoded Data: %s\n", decoded);
+
+				}else{
+					break;
+				}
+			}else{
+				break;
+			}
+		}else{
+			break;
+		}
+	}
+
+	// Delete self from existance
+	printf("Thread %d: Stopping...\n", id);
+	close(connections[id]);
+	connections[id] = 0;
+	return NULL;
+}
+
 // int main.
 int main(int argc, char *argv[]){
-	printf("WebSocket Server v0.0.8 Minimal\n\n");
+	printf("WebSocket Server v0.1.0 Minimal\n\n");
 
 	// Variables
 	int port = 50100;
 	int serving_fd, connection_fd, n;
 	struct sockaddr_in address;
-	uint8_t responce[2049];
+	uint8_t response[2049];
 	uint8_t received[2049];
 
 	// Read Command-line Inputs
@@ -28,6 +120,9 @@ int main(int argc, char *argv[]){
 		if(strcmp(argv[i], "--port") == 0 && argv[i+1]){
 			// Convert String to Integer
 			port = atoi(argv[i+1]);
+		}else if((strcmp(argv[i], "--max-con") == 0) && argv[i+1]){
+			// Convert String to Integer
+			max_con = atoi(argv[i+1]);
 		}
 	}
 
@@ -37,7 +132,18 @@ int main(int argc, char *argv[]){
 		port = 50100;
 	}
 
-	printf("Using Port: %d\n\n", port);
+	// Use Default Max Connection if Custom Limit is invalid
+	if(max_con <= 0 || max_con > 1024){
+		printf("Warning: Invalid Maximum Connection Limit\n");
+		max_con = 64;
+	}
+
+	printf("Using Port: %d\nMaximum Connections: %d\n\n", port, max_con);
+
+	// Allocate Memory for Connection FD Buffer
+	connections = malloc(max_con*4);
+	// Clean
+	memset(connections, 0, max_con*4);
 
 	// Socket
 	if((serving_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
@@ -56,7 +162,7 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 
-	if((listen(serving_fd, 8)) < 0){
+	if((listen(serving_fd, 16)) < 0){
 		printf("Error: Listening Error\n");
 		exit(1);
 	}
@@ -72,7 +178,7 @@ int main(int argc, char *argv[]){
 		// Read message in 2048 byte chunks
 		if((n=read(connection_fd, received, 2047)) > 4){
 			// Output to std
-			printf("%s", received);
+			printf("\nConnection Number: %d\n\n%s", connection_fd, received);
 
 			// Detect if request end exists (not a good way)
 			if(received[n-1] == '\n' && received[n-2] == '\r' && received[n-3] == '\n' && received[n-4] == '\r'){
@@ -152,24 +258,41 @@ int main(int argc, char *argv[]){
 
 					// Base64 Encode
 					char *b64_result = base64_encode(hash_result, (size_t)20, NULL); // The input length is always 20
+					
+					// Loop through Connection FD Buffer to find Free Space
+					for(int i=0; i<max_con; i++){
+						if(connections[i] == 0){ // Free
+							connections[i] = connection_fd;
 
-					printf("Info: Received WebSocket Upgrade Request\nSec-WebSocket-Accept: %s\n", b64_result);
+							printf("Info: Received WebSocket Upgrade Request\nSec-WebSocket-Accept: %s\n", b64_result);
 
-					// Respond with WebSocket Handshake
-					snprintf((char*)responce, sizeof(responce), "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: %s\r\n\r\n", b64_result);
-					write(connection_fd, (char*)responce, strlen((char*)responce));
-					//
-					close(connection_fd);
+							// Respond with WebSocket Handshake
+							snprintf((char*)response, sizeof(response), "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: %s\r\n\r\n", b64_result);
+							write(connection_fd, (char*)response, strlen((char*)response));
+
+							// Create New Worker Thread to Handle this Connection
+							pthread_t thread_id;
+							pthread_create(&thread_id, NULL, worker, (void*)&i);
+
+							break;
+						}else if(i == max_con-1){// No Free
+							printf("Warning: Reached Maximum Connection Limit, Refusing New Connection.\n");
+							// Respond with Error 503 to refuse WebSocket Connection
+							snprintf((char*)response, sizeof(response), "HTTP/1.1 503 Service Unavailable\r\n\r\n");
+							write(connection_fd, (char*)response, strlen((char*)response));
+							close(connection_fd);
+						}
+					}
 				}else{
 					// Respond with Polite Greeting
-					snprintf((char*)responce, sizeof(responce), "HTTP/1.0 200 OK\r\n\r\nHi");
-					write(connection_fd, (char*)responce, strlen((char*)responce));
+					snprintf((char*)response, sizeof(response), "HTTP/1.0 200 OK\r\n\r\nHi");
+					write(connection_fd, (char*)response, strlen((char*)response));
 					close(connection_fd);
 				}
 			}else{
-				// Respond with Error 400 if it gets cut off (request > 4kib)
-				snprintf((char*)responce, sizeof(responce), "HTTP/1.0 400 Bad Request\r\n\r\n");
-				write(connection_fd, (char*)responce, strlen((char*)responce));
+				// Respond with Error 400 if it gets cut off (request > 2kib)
+				snprintf((char*)response, sizeof(response), "HTTP/1.0 400 Bad Request\r\n\r\n");
+				write(connection_fd, (char*)response, strlen((char*)response));
 				close(connection_fd);
 			}
 

@@ -4,11 +4,6 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>WebSocket Test</title>
-	<style>
-		body {
-
-		}
-	</style>
 </head>
 <body>
 	<script>
@@ -16,23 +11,33 @@
 
 		let counter = 0
 		let lp
+		// This generates a random string to send for this client
+		let random = String(Math.floor(Math.random()*1000))
 
 		websocket.addEventListener('open', function(){
 			console.log('Connected to Server.')
+			document.body.innerHTML+='Connected to Server<br>'
 			lp = setInterval(function(){
-				console.log('Sent: Ping ('+counter+').')
-				websocket.send('ping')
+				console.log('Sent: '+random+' ('+counter+').')
+				document.body.innerHTML+='Sent: '+random+' ('+counter+').<br>'
+				websocket.send(random)
 			}, 1000)
 		})
 
 		websocket.addEventListener('message', function(e){
-			console.log('Received: '+e.data+'('+counter+').')
+			console.log('Received: '+e.data+' ('+counter+').')
+			document.body.innerHTML+='Received: '+e.data+' ('+counter+').<br>'
 			counter++
 		})
 
 		websocket.addEventListener('close', function(){
 			console.log('Disconnected from Server.')
+			document.body.innerHTML+='Disconnected from Server.<br>'
 			clearInterval(lp)
+		})
+
+		websocket.addEventListener('error', function(e){
+			document.body.innerHTML += `<span style="background-color: #f00;">(!) Error<br></span>`
 		})
 	</script>
 </body>
