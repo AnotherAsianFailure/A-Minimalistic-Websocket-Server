@@ -85,6 +85,69 @@ void *worker(void *arg){
 					// The Real Data has been Extracted!
 					printf("- Decoded Data: %s\n", decoded);
 
+					// This Server "Reflects" All Data it Receives to All Clients
+					if(opcode == 0 || opcode == 1 || opcode == 2){
+						// Calculate Response Length
+						uint64_t r_len = payload_length+2;
+						if(p_len == 126){
+							r_len += 2;
+						}else if(p_len == 127){
+							r_len += 8;
+						}
+
+						// Make New Buffer for Reflect Data
+						uint8_t reflect[r_len];
+						memset(reflect, 0, r_len);
+
+						// Add Frame Header Data
+						reflect[0] = fin << 7 | opcode;
+
+						int position = 1;
+
+						// Set Payload Length in Header
+						if(p_len <= 125){
+							// If smaller than 125
+							reflect[1] = p_len;
+							position++;
+						}else if(p_len == 126){
+							// Extended 16-bit Length
+							reflect[1] = (uint8_t)126;
+							reflect[2] = (uint8_t)(payload_length >> 8);
+							reflect[3] = (uint8_t)payload_length;
+							position += 3;
+						}else if(p_len == 127){
+							// Excessively Extended 64-bit Length
+							reflect[1] = (uint8_t)127;
+							reflect[2] = (uint8_t)(payload_length >> 56);
+							reflect[3] = (uint8_t)(payload_length >> 48);
+							reflect[4] = (uint8_t)(payload_length >> 40);
+							reflect[5] = (uint8_t)(payload_length >> 32);
+							reflect[6] = (uint8_t)(payload_length >> 24);
+							reflect[7] = (uint8_t)(payload_length >> 16);
+							reflect[8] = (uint8_t)(payload_length >> 8);
+							reflect[9] = (uint8_t)payload_length;
+							position += 9;
+						}
+
+						// Copy over the Payload Data
+						for(uint64_t i=0; i<payload_length; i++){
+							reflect[i+position] = decoded[i];
+						}
+
+						// Loop through All Clients and Send a Copy to Each
+						for(int i=0; i<max_con; i++){
+							if(connections[i]){
+								printf("Thread %d: Frame Reflected to Connection %d\n", id, i);
+								// Write into Socket
+								write(connections[i], reflect, r_len);
+							}
+						}
+					}else if(opcode == 8){
+						close(connections[id]);
+						printf("Thread %d: Connection Closed\n", id);
+						connections[id] = 0;
+						return NULL;
+					}
 				}else{
 					break;
 				}
@@ -105,7 +168,7 @@ void *worker(void *arg){
 
 // int main.
 int main(int argc, char *argv[]){
-	printf("WebSocket Server v0.1.0 Minimal\n\n");
+	printf("WebSocket Reflector v0.1.2 Minimal\n\n");
 
 	// Variables
 	int port = 50100;
