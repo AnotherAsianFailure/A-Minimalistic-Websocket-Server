@@ -1,5 +1,5 @@
 # A-Minimalistic-Websocket-Server
-An inadequate and substandard software of an absent-minded idiot, written entirely in C, with occasional instances of plagiarizing code and use of open-source libraries.<br><br>
+An inadequate and substandard implementation of The WebSocket Protocol by an absent-minded idiot, written entirely in C, with occasional instances of plagiarizing code and use of open-source libraries.<br><br>
 Imported Libraries Are: base64.c, sha1.c, and sha1.h. <br>
 *(Vibe-coding is Not Allowed Here!)*
 
@@ -15,16 +15,18 @@ Imported Libraries Are: base64.c, sha1.c, and sha1.h. <br>
 ## Features:
 *Features?! What features??*
 <br>
-- **1:** Listens on Port 50100 by Default, (this is due to the fact that these ports are usually left to die in the corner)
+- **1:** Reflects Any Packet Received from the Client to Every Client (including the sender).
+- For example, if Data is received from Client A, The Server will then send a copy of this data to Client A, B, and C.
+- **2:** Listens on Port 50100 by Default, (this is due to the fact that these ports are usually left to die in the corner)
 - However, this can be customized by setting the `--port` flag followed by an unsigned integer from 1 to 65535 (inclusive).
 - Example: `./wsserver --port 50101` (It will now listen on port 50101 instead)
-- **2:** Limits the Maximum Amount of Client Connections to 64.
+- **3:** Limits the Maximum Amount of Client Connections to 64.
 - Similar to `--port`, this value can be modified by specifying the `--max-con` flag followed by an unsigned non-zero integer up to 1024 (inclusive).
-- **3:** Spawns a New Worker Thread to handle each individual client connection, amount limited by `--max-con`.
-- **4:** Logs useless information to Standard Input/Output. e.g. The port that it is listening on, Client Sent Packets, and a whole bunch of other trash.
-- **5:** Only accepts 2048 bytes of Request Header Data, returns HTTP Error 400 otherwise. *(Is this even a feature??)*
-- **6:** Responds politely with "Hi", if Client Request is HTTP "GET" without "Upgrade".
-- **7:** Source Code includes ~incomprehensible ramblings of an idiot~ helpful comments.
+- **4:** Spawns a New Worker Thread to handle each individual client connection, amount limited by `--max-con`.
+- **5:** Logs useless information to Standard Input/Output. e.g. The port that it is listening on, Client Sent Packets, and a whole bunch of other trash.
+- **6:** Only accepts 2048 bytes of Request Header Data, returns HTTP Error 400 otherwise. *(Is this even a feature??)*
+- **7:** Responds politely with "Hi", if Client Request is HTTP "GET" without "Upgrade".
+- **8:** Source Code includes ~incomprehensible ramblings of an idiot~ helpful comments.
 
 ## Using test/index.html:
 ...<br>
